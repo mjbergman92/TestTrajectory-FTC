@@ -18,7 +18,7 @@ import jaci.pathfinder.modifiers.TankModifier;
 public class TrajectorySetup {
 	
 	//assumes the pivot is in the "exact" center of the robot
-	double wheelBase_width = 14.75, wheelBase_length = 16;
+	double wheelBase_width = 16.375, wheelBase_length = 16;
 	double robot_width = 18, robot_length = 20;
 	Trajectory left, right;
 	Trajectory.Segment segLeftX, segLeftY, segRightX, segRightY, segLV, segRV, segLA, segRA, segLJ, segRJ, segLP, segRP, segTime, segTraj;
@@ -30,9 +30,10 @@ public class TrajectorySetup {
 	public double xRobotOut1, yRobotOut1, xRobotOut2, yRobotOut2;
 	public int posTraj;
 	Waypoint[] points;
-	private final double absMaxVelocity = 50;
+	private final double absMaxVelocity = 16;
 	private double setVelocity = 0;
 	public boolean checkDone = false;
+	private double robotLoopTime = 0.020;
 	
 	
 	public TrajectorySetup() {
@@ -63,7 +64,7 @@ public class TrajectorySetup {
 				
 			}
 			
-			Trajectory.Config configurationMatches = new Trajectory.Config(FitMethod.HERMITE_CUBIC, 1000, 0.020, velocity, 180, 400);
+			Trajectory.Config configurationMatches = new Trajectory.Config(FitMethod.HERMITE_CUBIC, 1000, robotLoopTime, velocity, 180, 400);
 			Trajectory possibleTrajectory = Pathfinder.generate(points, configurationMatches);
 			DecimalFormat numberFormat = new DecimalFormat("#.000"); 
 			double matchesTest = Double.parseDouble(numberFormat.format(matches.segments[matches.length()/3].heading));
@@ -76,7 +77,7 @@ public class TrajectorySetup {
 			}else {
 				
 				testTrajectory(step);
-				Trajectory.Config configuration = new Trajectory.Config(FitMethod.HERMITE_CUBIC, 1000, 0.020, setVelocity, 180, 400);
+				Trajectory.Config configuration = new Trajectory.Config(FitMethod.HERMITE_CUBIC, 1000, robotLoopTime, setVelocity, 180, 400);
 				trajectory = Pathfinder.generate(points, configuration);
 				Pathfinder.writeToCSV(new File("trajectoryStep#" + step + "Traj#" + posTraj + ".csv"), trajectory);
 				
@@ -141,7 +142,7 @@ public class TrajectorySetup {
 		}else {
 			
 			testTrajectory(step);
-			Trajectory.Config configuration = new Trajectory.Config(FitMethod.HERMITE_CUBIC, 1000, 0.020, setVelocity, 180, 400);
+			Trajectory.Config configuration = new Trajectory.Config(FitMethod.HERMITE_CUBIC, 1000, robotLoopTime, setVelocity, 180, 400);
 			trajectory = Pathfinder.generate(points, configuration);
 			Pathfinder.writeToCSV(new File("trajectoryStep#" + step + "Traj#" + posTraj + ".csv"), trajectory);
 			
@@ -186,8 +187,8 @@ public class TrajectorySetup {
 				}
 			}
 			
-			Pathfinder.writeToCSV(new File("right" + "trajectoryStep#" + step + "Traj#" + posTraj + ".csv"), right);
-			Pathfinder.writeToCSV(new File("left" + "trajectoryStep#" + step + "Traj#" + posTraj + ".csv"), left);
+			Pathfinder.writeToCSV(new File("right" + "trajectorystep" + step + "traj" + posTraj + ".csv"), right);
+			Pathfinder.writeToCSV(new File("left" + "trajectorystep" + step + "traj" + posTraj + ".csv"), left);
 			
 			try {
 				
@@ -215,7 +216,7 @@ public class TrajectorySetup {
 	private void testTrajectory(int step) {
 				
 		long originalTime = System.currentTimeMillis();
-		int countTimeTest = 1;
+		double countTimeTest = 1;
 		boolean good;
 		while(countTimeTest <= absMaxVelocity) {
 			
@@ -224,7 +225,7 @@ public class TrajectorySetup {
 				resetCounters();
 				double test = countTimeTest;
 				//System.out.println(test);
-				Trajectory.Config config = new Trajectory.Config(FitMethod.HERMITE_CUBIC, 1000, 0.020, test, 180, 400);
+				Trajectory.Config config = new Trajectory.Config(FitMethod.HERMITE_CUBIC, 1000, robotLoopTime, test, 180, 400);
 				Trajectory trajectory = Pathfinder.generate(points, config);
 				TankModifier modifier = new TankModifier(trajectory);
 				modifier.modify(wheelBase_width);
@@ -260,7 +261,7 @@ public class TrajectorySetup {
 					
 				}			
 				
-				countTimeTest++;
+				countTimeTest = countTimeTest + 0.25;
 				
 			}
 		}
@@ -314,22 +315,23 @@ public class TrajectorySetup {
 	
 	private void getTraj1Points(int step) {
 		
-		double originalX = 66 - (Math.sqrt(Math.pow(11.5 + 4, 2) / 2));
-		double originalY = (Math.sqrt(Math.pow(11.5 + 4, 2) / 2));
+		double originalX = 66 - (Math.sqrt(Math.pow(11.5 + 3.125, 2) / 2));
+		double originalY = (Math.sqrt(Math.pow(11.5 + 3.125, 2) / 2));
 		
 		if(step == 1) {
 			
 			points = new Waypoint[] {
-					new Waypoint(originalX, originalY, Pathfinder.d2r(135)),
-					new Waypoint(originalX - Math.sqrt(Math.pow(20, 2) / 2), originalY + Math.sqrt(Math.pow(20, 2) / 2), Pathfinder.d2r(135))	
+					new Waypoint(66 - 15.5, 12.5, Pathfinder.d2r(178)),
+					new Waypoint(66 - 25, 12.5, Pathfinder.d2r(180)),
+					new Waypoint(5, -35, Pathfinder.d2r(270))
 				};
 			
 		}else if(step == 2) {
 			
 			
 			points = new Waypoint[] {
-					new Waypoint(originalX - Math.sqrt(Math.pow(20, 2) / 2), originalY + Math.sqrt(Math.pow(20, 2) / 2), Pathfinder.d2r(135)),
-					new Waypoint(originalX, originalY, Pathfinder.d2r(135))
+					new Waypoint(5, -35, Pathfinder.d2r(270)),
+					new Waypoint(5, 58, Pathfinder.d2r(270))
 				};
 			
 		}else if(step == 3) {
@@ -361,8 +363,9 @@ public class TrajectorySetup {
 		if(step == 1) {
 			
 			points = new Waypoint[] {
-					new Waypoint(robot_length/2,(-robot_width/2)+12,0),
-					new Waypoint(140 - (robot_length/2),-72+(robot_width/2),0)
+					new Waypoint(66 - 12.5, -15.5, Pathfinder.d2r(-92)),
+					//new Waypoint(55, -45, Pathfinder.d2r(-110)),
+					new Waypoint(27,-66 + 14,Pathfinder.d2r(-180))
 				};
 			
 		}else if(step == 2) {
@@ -723,7 +726,7 @@ public class TrajectorySetup {
 	public double timePassed() {
 		//number of segments * timeStep = total time passed
 			iTime++;
-		return  iTime * 0.020;
+		return  iTime * robotLoopTime;
 	}
 	
 	public void robotBox(double lx, double ly, double rx, double ry) {

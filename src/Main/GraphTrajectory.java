@@ -2,7 +2,9 @@ package Main;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -82,7 +84,9 @@ public class GraphTrajectory {
 		numberRangeAxis.setRange(-66, 66);
 		NumberAxis numberDomainAxis = (NumberAxis)chart.getXYPlot().getDomainAxis();
 		numberDomainAxis.setRange(0, 132);
-		Lpanel.add(new ChartPanel(chart),BorderLayout.NORTH);
+		ChartPanel chartPanel = new ChartPanel(chart);
+		chartPanel.setPreferredSize(new Dimension(625, 400));
+		Lpanel.add(chartPanel,BorderLayout.NORTH);
 		
 		//create xy line graph for velocity
 		XYSeries leftVSeries = new XYSeries("Left Velocity");
@@ -98,7 +102,9 @@ public class GraphTrajectory {
 		VAJdataset.addSeries(leftJSeries);
 		VAJdataset.addSeries(rightJSeries);
 		JFreeChart VAJchart = ChartFactory.createXYLineChart("Velocity, Acceleration, and Jerk", "Time (Seconds)", "Distance/Second (Inches/Second), Distance/Second/Second (Inches/Second^2), AND Distance/Second/Second/Second (Inches/Second^3)", VAJdataset);
-		Rpanel.add(new ChartPanel(VAJchart),BorderLayout.NORTH);
+		ChartPanel VAJPanel = new ChartPanel(VAJchart);
+		VAJPanel.setPreferredSize(new Dimension(625, 400));
+		Rpanel.add(VAJPanel,BorderLayout.NORTH);
 		
 		//create xy line graph for left position/distance
 		XYSeries leftDSeries = new XYSeries("Left Distance");
@@ -107,6 +113,7 @@ public class GraphTrajectory {
 		JFreeChart Lchart = ChartFactory.createXYLineChart("Left Side Distance and Velocity", "Time (Seconds)", "Distance (Inches) AND Distance/Second (Inches/Second", dataLset);
 		ChartPanel LCPanel = new ChartPanel(Lchart);
 		LCPanel.getChart().setBackgroundPaint(Color.RED);
+		LCPanel.setPreferredSize(new Dimension(550, 250));
 		Lpanel.add(LCPanel,BorderLayout.SOUTH);
 		
 		//create xy line graph for right position/distance
@@ -116,7 +123,8 @@ public class GraphTrajectory {
 		JFreeChart Rchart = ChartFactory.createXYLineChart("Right Side Distance and Velocity", "Time (Seconds)", "Distance (Inches) AND Distance/Second (Inches/Second", dataRset);
 		ChartPanel RCPanel = new ChartPanel(Rchart);
 		RCPanel.getChart().setBackgroundPaint(Color.BLUE);
-		Rpanel.add(new ChartPanel(Rchart),BorderLayout.SOUTH);
+		RCPanel.setPreferredSize(new Dimension(550, 250));
+		Rpanel.add(RCPanel,BorderLayout.SOUTH);
 		
 		//add panels to window
 		window.add(Lpanel, BorderLayout.WEST);

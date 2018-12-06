@@ -7,6 +7,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -15,9 +19,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RectangleInsets;
@@ -82,7 +88,8 @@ public class GraphTrajectory {
 		numberRangeAxis.setRange(-66, 66);
 		NumberAxis numberDomainAxis = (NumberAxis)chart.getXYPlot().getDomainAxis();
 		numberDomainAxis.setRange(0, 132);
-		Lpanel.add(new ChartPanel(chart),BorderLayout.NORTH);
+		ChartPanel mainChartPanel = new ChartPanel(chart);
+		Lpanel.add(mainChartPanel,BorderLayout.NORTH);
 		
 		//create xy line graph for velocity
 		XYSeries leftVSeries = new XYSeries("Left Velocity");
@@ -398,6 +405,48 @@ public class GraphTrajectory {
 					starterThread.start();
 				}
 			}
+			
+		});
+		
+		mainChartPanel.addMouseListener(new MouseListener() {
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				
+				
+				Point2D p = mainChartPanel.translateScreenToJava2D(new ChartMouseEvent(chart, e, null).getTrigger().getPoint());
+				Rectangle2D plotArea = mainChartPanel.getScreenDataArea();
+				XYPlot plot = (XYPlot) chart.getPlot(); // your plot
+				double chartX = plot.getDomainAxis().java2DToValue(p.getX(), plotArea, plot.getDomainAxisEdge());
+				double chartY = plot.getRangeAxis().java2DToValue(p.getY(), plotArea, plot.getRangeAxisEdge());
+				label.setText(chartX + "");
+				
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
 			
 		});
 		

@@ -323,15 +323,15 @@ public class TrajectorySetup {
 			points = new Waypoint[] {
 					new Waypoint(66 - 15.5, 12.5, Pathfinder.d2r(178)),
 					new Waypoint(66 - 25, 12.5, Pathfinder.d2r(180)),
-					new Waypoint(5, -35, Pathfinder.d2r(270))
+					new Waypoint(11, -35, Pathfinder.d2r(270))
 				};
 			
 		}else if(step == 2) {
 			
 			
 			points = new Waypoint[] {
-					new Waypoint(5, -35, Pathfinder.d2r(270)),
-					new Waypoint(5, 58, Pathfinder.d2r(270))
+					new Waypoint(11, -35, Pathfinder.d2r(270)),
+					new Waypoint(11, 58, Pathfinder.d2r(270))
 				};
 			
 		}else if(step == 3) {

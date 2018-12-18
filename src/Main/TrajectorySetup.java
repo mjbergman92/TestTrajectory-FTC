@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import jaci.pathfinder.Pathfinder;
@@ -34,6 +35,7 @@ public class TrajectorySetup {
 	private double setVelocity = 0;
 	public boolean checkDone = false;
 	private double robotLoopTime = 0.020;
+	public boolean[] firstTimeThroughDone = {false, false, false, false, false, false, false, false};
 	
 	
 	public TrajectorySetup() {
@@ -42,19 +44,20 @@ public class TrajectorySetup {
 	
 	public void setup(int step) {
 		
+		
 		checkDone = false;
 		posTraj = GraphTrajectory.traj;
 		resetCounters();
 		waypointsStep(step);
 		
-		if(new File("trajectoryStep#" + step + "Traj#" + posTraj + ".csv").canRead() && new File("velocity" + step + posTraj + ".csv").canRead()) {
+		if(firstTimeThroughDone[posTraj - 1]) {
 			
-			Trajectory matches = Pathfinder.readFromCSV(new File("trajectoryStep#" + step + "Traj#" + posTraj + ".csv"));
+			testTrajectory(step);
 			Scanner scanner;
 			double velocity = 0;
 			try {
 				
-				scanner = new Scanner(new File("velocity" + step + posTraj + ".csv"));
+				scanner = new Scanner(new File("trajectory" + posTraj + "/velocity" + "/velocity" + step + posTraj + ".csv"));
 				velocity = Double.parseDouble(scanner.next());
 				scanner.close();
 				
@@ -63,40 +66,8 @@ public class TrajectorySetup {
 				e1.printStackTrace();
 				
 			}
-			
-			Trajectory.Config configurationMatches = new Trajectory.Config(FitMethod.HERMITE_CUBIC, 1000, robotLoopTime, velocity, 180, 400);
-			Trajectory possibleTrajectory = Pathfinder.generate(points, configurationMatches);
-			DecimalFormat numberFormat = new DecimalFormat("#.000"); 
-			double matchesTest = Double.parseDouble(numberFormat.format(matches.segments[matches.length()/3].heading));
-			double possibleTest = Double.parseDouble(numberFormat.format(possibleTrajectory.segments[possibleTrajectory.length()/3].heading));
-			
-			if(matchesTest == possibleTest) {
-				
-				trajectory = possibleTrajectory;
-				
-			}else {
-				
-				testTrajectory(step);
-				Trajectory.Config configuration = new Trajectory.Config(FitMethod.HERMITE_CUBIC, 1000, robotLoopTime, setVelocity, 180, 400);
-				trajectory = Pathfinder.generate(points, configuration);
-				Pathfinder.writeToCSV(new File("trajectoryStep#" + step + "Traj#" + posTraj + ".csv"), trajectory);
-				
-				try {
-					
-					FileWriter fw = new FileWriter("velocity" + step + posTraj + ".csv");
-					BufferedWriter bw = new BufferedWriter(fw);
-					PrintWriter pw = new PrintWriter(bw);
-					
-					pw.print(setVelocity);
-					pw.flush();
-					pw.close();
-					
-				} catch (IOException e) {
-
-					e.printStackTrace();
-					
-				}
-			}
+			Trajectory.Config configuration = new Trajectory.Config(FitMethod.HERMITE_CUBIC, 1000, robotLoopTime, velocity, 180, 400);
+			trajectory = Pathfinder.generate(points, configuration);
 			
 			resetCounters();
 			TankModifier modifier = new TankModifier(trajectory);
@@ -139,12 +110,19 @@ public class TrajectorySetup {
 				}
 			}
 			
-		}else {
+			
+		}else { 
+			
+			new File("trajectory" + posTraj + "/center" + "/trajectorystep" + step + "traj" + posTraj + ".csv").delete();
+			new File("trajectory" + posTraj + "/right" + "trajectorystep" + step + "traj" + posTraj + ".csv").delete();
+			new File("trajectory" + posTraj + "left" + "trajectorystep" + step + "traj" + posTraj + ".csv").delete();
+			new File("trajectory" + posTraj + "/velocity" + "/velocity" + step + posTraj + ".csv").delete();
+
 			
 			testTrajectory(step);
 			Trajectory.Config configuration = new Trajectory.Config(FitMethod.HERMITE_CUBIC, 1000, robotLoopTime, setVelocity, 180, 400);
 			trajectory = Pathfinder.generate(points, configuration);
-			Pathfinder.writeToCSV(new File("trajectoryStep#" + step + "Traj#" + posTraj + ".csv"), trajectory);
+			Pathfinder.writeToCSV(new File("trajectory" + posTraj + "/center" + "/trajectorystep" + step + "traj" + posTraj + ".csv"), trajectory);
 			
 			resetCounters();
 			TankModifier modifier = new TankModifier(trajectory);
@@ -187,12 +165,12 @@ public class TrajectorySetup {
 				}
 			}
 			
-			Pathfinder.writeToCSV(new File("right" + "trajectorystep" + step + "traj" + posTraj + ".csv"), right);
-			Pathfinder.writeToCSV(new File("left" + "trajectorystep" + step + "traj" + posTraj + ".csv"), left);
+			Pathfinder.writeToCSV(new File("trajectory" + posTraj + "/right" + "trajectorystep" + step + "traj" + posTraj + ".csv"), right);
+			Pathfinder.writeToCSV(new File("trajectory" + posTraj + "/left" + "trajectorystep" + step + "traj" + posTraj + ".csv"), left);
 			
 			try {
 				
-				FileWriter fw = new FileWriter("velocity" + step + posTraj + ".csv");
+				FileWriter fw = new FileWriter("trajectory" + posTraj + "/velocity" + "/velocity" + step + posTraj + ".csv");
 				BufferedWriter bw = new BufferedWriter(fw);
 				PrintWriter pw = new PrintWriter(bw);
 				
@@ -206,8 +184,6 @@ public class TrajectorySetup {
 			
 			}
 		}
-		
-		
 		
 		checkDone = true;
 		
@@ -320,11 +296,8 @@ public class TrajectorySetup {
 		
 		if(step == 1) {
 			
-			points = new Waypoint[] {
-					new Waypoint(66 - 15.5, 12.5, Pathfinder.d2r(178)),
-					new Waypoint(66 - 25, 12.5, Pathfinder.d2r(180)),
-					new Waypoint(11, -35, Pathfinder.d2r(270))
-				};
+			setPoints(step);
+			
 			
 		}else if(step == 2) {
 			
@@ -615,6 +588,64 @@ public class TrajectorySetup {
 			
 		}else if(step == 5) {
 			
+		}
+		
+	}
+	
+	private void setPoints(int step) {
+		
+		Scanner in;
+		try {
+			
+			in = new Scanner(new File("trajectory" + posTraj + "/points" + "/trajectory" + posTraj + "step" + step + "points.csv"));
+		
+				
+			ArrayList<String[]> waypoints = new ArrayList<String[]>();
+			for(int i = 0; i < 3; i++) {
+				
+				String inLine = in.nextLine();
+				System.out.println(inLine);
+				String lines[] = inLine.split(",");
+				switch(i + 1) {
+				
+				case 1:
+					waypoints.add(0, lines);;
+					break;
+				case 2:
+					waypoints.add(1, lines);
+					break;
+				case 3:
+					waypoints.add(2, lines);
+					break;
+				
+				}
+				
+			}
+			
+			float xPoint1 = Float.parseFloat(waypoints.get(0)[0]);
+			float yPoint1 = Float.parseFloat(waypoints.get(0)[1]);
+			float hPoint1 = Float.parseFloat(waypoints.get(0)[2]);
+			float xPoint2 = Float.parseFloat(waypoints.get(1)[0]);
+			float yPoint2 = Float.parseFloat(waypoints.get(1)[1]);
+			float hPoint2 = Float.parseFloat(waypoints.get(1)[2]);
+			float xPoint3 = Float.parseFloat(waypoints.get(2)[0]);
+			float yPoint3 = Float.parseFloat(waypoints.get(2)[1]);
+			float hPoint3 = Float.parseFloat(waypoints.get(2)[2]);
+			
+			
+			points = new Waypoint[] {
+					new Waypoint(xPoint1, yPoint1, hPoint1),
+					new Waypoint(xPoint2, yPoint2, hPoint2),
+					new Waypoint(xPoint3, yPoint3, hPoint3)
+				};
+
+			
+			in.close();
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			e.getMessage();
 		}
 		
 	}

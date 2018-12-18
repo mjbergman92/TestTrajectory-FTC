@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,12 +14,22 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Scanner;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.ListCellRenderer;
+import javax.swing.JComboBox;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartMouseEvent;
@@ -29,6 +40,8 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RectangleInsets;
+
+import jaci.pathfinder.Pathfinder;
 
 public class GraphTrajectory {
 
@@ -53,7 +66,10 @@ public class GraphTrajectory {
 		window.setSize(1450,1000);
 		window.isResizable();
 		window.setLayout(new BorderLayout());
-		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);;
+		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		//create define the jframe for setting the new waypoints
+		JFrame coordinateWindow = new JFrame();
 		
 		//create and configure the button and label
 		JButton button = new JButton("End");
@@ -373,13 +389,16 @@ public class GraphTrajectory {
 							
 							while(!run) {
 								if(setup && firstTime) {
-									
-									trajectorySetup.setup(2);
-									trajectorySetup.setup(3);
-									trajectorySetup.setup(4);
-									trajectorySetup.setup(5);
-									trajectorySetup.setup(1);
-
+									if( !trajectorySetup.firstTimeThroughDone[traj - 1]) {
+										trajectorySetup.setup(2);
+										trajectorySetup.setup(3);
+										trajectorySetup.setup(4);
+										trajectorySetup.setup(5);
+										trajectorySetup.setup(1);
+										trajectorySetup.firstTimeThroughDone[traj - 1] = true;
+	
+										
+									}
 									label.setText(trajSet + traj + "." + pressR);
 									wait1 = false;
 									firstTime = false;
@@ -426,7 +445,160 @@ public class GraphTrajectory {
 				XYPlot plot = (XYPlot) chart.getPlot(); // your plot
 				double chartX = plot.getDomainAxis().java2DToValue(p.getX(), plotArea, plot.getDomainAxisEdge());
 				double chartY = plot.getRangeAxis().java2DToValue(p.getY(), plotArea, plot.getRangeAxisEdge());
-				label.setText(chartX + "");
+				coordinateWindow.dispose();
+				coordinateWindow.setTitle("Change Waypoint");
+				coordinateWindow.setSize(700,400);
+				coordinateWindow.isResizable();
+				coordinateWindow.setLayout(new BorderLayout());
+				
+				JPanel fieldLabels = new JPanel();
+				fieldLabels.setLayout(null);
+				fieldLabels.setPreferredSize(new Dimension(350, 400));
+				JPanel fieldEntries = new JPanel();
+				fieldEntries.setLayout(null);
+				fieldEntries.setPreferredSize(new Dimension(350, 400));
+				
+				JLabel trajStepLabel = new JLabel("Trajectory | Step");
+				trajStepLabel.setFont(new Font(Font.DIALOG, Font.PLAIN, 30));
+				JLabel waypointNumberLabel = new JLabel("Waypoint #");
+				waypointNumberLabel.setFont(new Font(Font.DIALOG, Font.PLAIN, 30));
+				JLabel xLabel = new JLabel("X Coordinate");
+				xLabel.setFont(new Font(Font.DIALOG, Font.PLAIN, 30));
+				JLabel yLabel = new JLabel("Y Coordinate");
+				yLabel.setFont(new Font(Font.DIALOG, Font.PLAIN, 30));
+				JLabel headingLabel = new JLabel("Heading");
+				headingLabel.setFont(new Font(Font.DIALOG, Font.PLAIN, 30));
+				
+				fieldLabels.add(trajStepLabel);
+				fieldLabels.add(waypointNumberLabel);
+				fieldLabels.add(xLabel);
+				fieldLabels.add(yLabel);
+				fieldLabels.add(headingLabel);
+				
+				String trajs[] = {"1", "2", "3", "4", "5", "6", "7", "8"};
+				String steps[] = {"1", "2", "3", "4", "5"};
+				String waypoints[] = {"1", "2", "3"};
+				
+				JComboBox trajBox = new JComboBox(trajs);
+				JComboBox stepBox = new JComboBox(steps);
+				trajBox.setFont(new Font(Font.DIALOG, Font.PLAIN, 30));
+				stepBox.setFont(new Font(Font.DIALOG, Font.PLAIN, 30));
+				JComboBox waypointNumberBox = new JComboBox(waypoints);
+				waypointNumberBox.setFont(new Font(Font.DIALOG, Font.PLAIN, 30));
+				JTextField xCoordinate = new JTextField(chartX + "");
+				xCoordinate.setFont(new Font(Font.DIALOG, Font.PLAIN, 30));
+				JTextField yCoordinate = new JTextField(chartY + "");
+				yCoordinate.setFont(new Font(Font.DIALOG, Font.PLAIN, 30));
+				JTextField heading = new JTextField(0.0 + "");
+				heading.setFont(new Font(Font.DIALOG, Font.PLAIN, 30));
+				
+				fieldEntries.add(trajBox);
+				fieldEntries.add(stepBox);
+				fieldEntries.add(waypointNumberBox);
+				fieldEntries.add(xCoordinate);
+				fieldEntries.add(yCoordinate);
+				fieldEntries.add(heading);
+				
+				Insets labelInsets = fieldLabels.getInsets();
+				Insets entriesInsets = fieldEntries.getInsets();
+				
+				Dimension size = trajStepLabel.getPreferredSize();
+				trajStepLabel.setBounds(10 + labelInsets.left, 10 + labelInsets.top, size.width, size.height);
+				size = waypointNumberLabel.getPreferredSize();
+				waypointNumberLabel.setBounds(10 + labelInsets.left, 55 + labelInsets.top, size.width, size.height);
+				size = xLabel.getPreferredSize();
+				xLabel.setBounds(10 + labelInsets.left, 100 + labelInsets.top, size.width, size.height);
+				size = yLabel.getPreferredSize();
+				yLabel.setBounds(10 + labelInsets.left, 145 + labelInsets.top, size.width, size.height);
+				size = headingLabel.getPreferredSize();
+				headingLabel.setBounds(10 + labelInsets.left, 190 + labelInsets.top, size.width, size.height);
+				
+				trajBox.setBounds(entriesInsets.right, 10 + entriesInsets.top, 175, size.height);
+				stepBox.setBounds(175 + entriesInsets.right, 10 + entriesInsets.top, 175, size.height);
+				waypointNumberBox.setBounds(entriesInsets.right, 55 + entriesInsets.top, 350, size.height);
+				xCoordinate.setBounds(entriesInsets.right, 100 + entriesInsets.top, 350, size.height);
+				yCoordinate.setBounds(entriesInsets.right, 145 + entriesInsets.top, 350, size.height);
+				heading.setBounds(entriesInsets.right, 190 + entriesInsets.top, 350, size.height);
+
+				coordinateWindow.add(fieldLabels, BorderLayout.WEST);
+				coordinateWindow.add(fieldEntries, BorderLayout.EAST);
+				
+				coordinateWindow.setLocation(window.getLocation().x + 675, window.getLocation().y + 55);
+				
+				
+				heading.addKeyListener(new KeyListener() {
+
+					@Override
+					public void keyTyped(KeyEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+
+					@Override
+					public void keyPressed(KeyEvent e) {
+						
+						if(e.getKeyCode() == 10) {
+							
+							System.out.println("Hello Hello");
+									
+							Scanner scanner;
+							String lines[] = {"", "", ""};
+							try {
+								int i = 0;
+								scanner = new Scanner(new File("trajectory" + trajBox.getSelectedItem() + "/points" + "/trajectory" + trajBox.getSelectedItem() + "step" + stepBox.getSelectedItem() + "points.csv"));
+								while(scanner.hasNextLine()){
+						
+									lines[i] = scanner.nextLine();
+									i++;
+									
+								}
+								scanner.close();
+								
+							} catch (FileNotFoundException e1) {
+								
+								e1.printStackTrace();
+								
+							}
+							double parsedHeading = Double.parseDouble(heading.getText());
+							lines[Integer.parseInt((String) waypointNumberBox.getSelectedItem()) - 1] = xCoordinate.getText() + "," + yCoordinate.getText() + "," + Pathfinder.d2r(parsedHeading);
+							
+							new File("trajectory" + trajBox.getSelectedItem() + "/points" + "/trajectory" + trajBox.getSelectedItem() + "step" + stepBox.getSelectedItem() + "points.csv").delete();
+							
+							FileWriter fw = null;
+							try {
+								fw = new FileWriter("trajectory" + trajBox.getSelectedItem() + "/points" + "/trajectory" + trajBox.getSelectedItem() + "step" + stepBox.getSelectedItem() + "points.csv");
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+							BufferedWriter bw = new BufferedWriter(fw);
+							PrintWriter pw = new PrintWriter(bw);
+							
+							for(String s : lines) {
+									
+								pw.println(s);
+								
+							}
+							
+							pw.flush();
+							pw.close();
+							
+						}
+						
+					}
+
+					@Override
+					public void keyReleased(KeyEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					
+					
+				});
+				
+				coordinateWindow.setVisible(true);
+				
 				
 			}
 
@@ -456,6 +628,7 @@ public class GraphTrajectory {
 			
 			
 		});
+		
 		
 		//show the window
 		window.setVisible(true);
